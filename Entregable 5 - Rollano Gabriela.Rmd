@@ -1,0 +1,574 @@
+---
+title: "Entregable 5 "
+date: "19/06/2022"
+author: "Gabriela Eliana Rollano Málaga"
+output: rmdformats::readthedown
+code_folding: show
+self_contained: true
+thumbnails: false
+lightbox: false
+pkgdown:
+as_is: true
+---
+
+## FACULTAD DE CIENCIAS SOCIALES - PUCP <br>
+
+### Curso: POL 304 - Estadística para el análisis político 2 <br>
+
+### Semestre 2022-1<br>
+
+### **REPORTE INDIVIDUAL: Entregable 5** <br>
+
+### **Número de grupo: Grupo 4** <br>
+
+### **Nombres y apellidos de la estudiante: Gabriela Eliana Rollano Málaga** <br>
+
+============================================================
+
+
+# PRIMERA PARTE: Una explicación detallada de las variables estudiadas.
+
++ **a. Introducción**
+El presente, es un reporte de Democracia de 2022 realizado por el Instituto V-Dem, el objetivo principal es que este reporte ayude a tener un mejor entendimiento de los retos que implica la democracia alrededor del mundo. Analizaremos la democracia alrededor del mundo durante el año 2021. Los niveles de democracia en el mundo suponen una baja hacia el año 2021 si se compara con otros años, debido a las dictaduras, autocracias o golpes de estado; por ello estudiaremos como va la democracia en el año 2021.
+Para fines de realizar este reporte, primero, trabajaremos con una variable dependiente que es el Indice de Democracia Liberal y haremos una regresión para ver la relación con sus variables independientes Autonomía de los Gobiernos Electorales, Medios de comunicación escritos o transmitidos críticos del gobierno y el Respeto a Contraargumentos.
+Como hipótesis tenemos que hay una relación de dependencia de estas tres variables independientes con el Indice de Democracia Liberal. 
+Segundo, realizaremos un análisis de conglomerados para disminuir dimensiones y hacer un cálculo de cuántos clusters se van a constituir, para ello hacemos el uso de los métodos "particionante", "jerárquica aglomerativa" y "jerárquica divisiva", cada uno de elos nos da un número sugerido de clusters para luego visualizarlos y ver cuál es el método que mejor agrupa los casos. Para la realización de esta técnica haremos uso de seis variables independientes Autonomía de los Gobiernos Electorales, Medios de comunicación escritos o transmitidos críticos del gobierno y el Respeto a Contraargumentos, Represión gubernamental de Organizaciones de Sociedad Civil,Control gubernamental sobre Organizaciones de Sociedad Civil y Consulta gubernamental hacia Organizaciones de Sociedad Civil.
+Como hipótesis tenemos que a partir del gráfico de siluetas podremos ver qué técnica tiene el mayor puntaje y agrupa mejor los casos.
+Tercero, realizaremos un análisis factorial con las mismas seis variables con el fin de reducirlas y ver cuántos factores nos sugiere la técnica y/o están detrás del concepto de Democracia Liberal.
+Como hipótesis se tiene que hay un sólo factor que está detrás del comportamiento de esas 6 variables, ya que todas son parte del Indice de Democracia Liberal.
+
++ **b. Objetivos**
+El objetivo es demostrar y comunicar los resultados obtenidos de estas técnicas de una manera clara, concisa y que llegue a un público no conocedor de estadística.
++ **c. Explicación de la variable dependiente :** 
+El principio liberal de la democracia enfatiza la importancia de proteger a los individuos y los derechos de las minorías frente a la tiranía del Estado y la tiranía de la mayoría. El modelo liberal adopta una visión "negativa" del poder político en la medida en que juzga la calidad de la democracia por
+los límites impuestos al gobierno. Esto se logra mediante las libertades civiles constitucionalmente protegidas, un Estado de derecho sólido, un poder judicial independiente y controles y equilibrios efectivos, entre otros, que en conjunto, nos permite explicar el Indice de Democracia Liberal.
+
++ **c. Explicación de las variables independientes escogidas**
+Tenemos seis variables independientes y a continuación se aclara lo que significa cada una, según nuetra metadata.
+Autonomía de los Organismos Electorales: Los organismos electorales tienen autonomía del gobierno para aplicar leyes electorales y normas administrativas imparcialmente en las elecciones nacionales.
+Medios de comunicación escritos o transmitidos críticos del gobierno: De los principales medios impresos y de radiodifusión, ¿cuántos critican rutinariamente al gobierno?
+Respeto a Contraargumentos: Cuando se están considerando cambios de política importantes, ¿en qué medida las élites políticas reconocen y respetan los contraargumentos?
+Represión gubernamental de Organizaciones de Sociedad Civil: ¿El gobierno intenta reprimir a las organizaciones de la sociedad civil?
+Control gubernamental sobre Organizaciones de Sociedad Civil: ¿En qué medida el gobierno logra controlar la entrada y salida de la sociedad civil en la vida pública?
+Consulta gubernamental hacia Organizaciones de Sociedad Civil: ¿Las organizaciones de la sociedad civil más importantes son consultadas periódicamente por los encargados de la formulación de políticas sobre
+políticas relevantes para sus miembros?
+
++ **d. Hipótesis**
+Los resultados obtenidos de estas técnicas se leen de una manera clara y concisa y son sumamente necesarios para demostrar la dependencia de las variables independientes del Indice de Democracia Liberal; así mismo se puede clusterizar para obtener menos dimensiones y se puede realizar un análisis factorial para ver cuántos factores están detrás de las seis variables.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(rio)
+library(DescTools)
+library(ggplot2)
+library(moments)
+library(Rmisc)
+library(e1071)
+library(psych)
+library(dplyr)
+library(gplots)
+library(vcd)
+library(PMCMRplus)
+library(nortest)
+library(car)
+library(stargazer)
+library(lm.beta)
+library(gtools)
+library(jtools)
+library(ggstance)
+library(fastDummies)
+library(writexl)
+library(lmtest)
+library(polycor)
+library(ggcorrplot)
+library(matrixcalc)
+library(GPArotation)
+library(lavaan)
+library(BBmisc)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+vdem = import("https://github.com/GabrielaRollano/Entregable-3/blob/main/V-Dem-CY-Core-v12.rds?raw=true")
+View(vdem)
+```
+
++ **1. Variable dependiente - Índice de Democracia Liberal (v2x_libdem)**
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+summary(vdem$v2x_libdem)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(vdem$v2x_libdem)
+```
+
++ **2. Variables independientes**
++ **2.1.Autonomía de los Organismos Electorales (v2elembaut_ord)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(vdem$v2elembaut_ord)
+summary(vdem$v2elembaut_ord)
+```
+
++ **2.2 Medios de comunicación escritos o transmitidos críticos del gobierno (v2mecrit_ord)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(vdem$v2mecrit_ord)
+summary(vdem$v2mecrit_ord)
+```
+
++ **2.3. Respeto a Contraargumentos (v2dlcountr_ord)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(vdem$v2dlcountr_ord)
+summary(vdem$v2dlcountr_ord)
+```
++ **2.4. Represión gubernamental de Organizaciones de Sociedad Civil (v2csreprss_ord)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(vdem$v2csreprss_ord)
+summary(vdem$v2csreprss_ord)
+```
+
++ **2.5. Control gubernamental sobre Organizaciones de Sociedad Civil (v2cseeorgs_ord)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(vdem$v2cseeorgs_ord)
+summary(vdem$v2cseeorgs_ord)
+```
+
++ **2.6. Consulta gubernamental hacia Organizaciones de Sociedad Civil (v2cscnsult_ord)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(vdem$v2cscnsult_ord)
+summary(vdem$v2cscnsult_ord)
+```
+
+# SEGUNDA PARTE: Análisis de regresión.  
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+vdem_gabriela = subset(vdem, select = c(country_name, year, v2x_libdem, v2elembaut_ord, v2mecrit_ord, v2dlcountr_ord))
+vdem_gabriela = vdem_gabriela[vdem_gabriela$year==2021,]
+vdem_gabriela[, c(4:6)] = lapply(vdem_gabriela[, c(4:6)], ordered)
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+modelog <- lm(v2x_libdem~v2elembaut_ord+v2mecrit_ord+v2dlcountr_ord, data=vdem_gabriela)
+summary(modelog)
+```
+# ANEXOS: Análisis de regresión.  
++ **Observar en stargazer**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+stargazer(modelog, type = "text")
+```
+
++ **Comprobar supuestos de regresión lineal**
++ **Linealidad**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+plot(modelog, 1)
+```
++ **Homocedasticidad**
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+plot(modelog, 3)
+```
++ **Test de Breusch-Pagan**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+library(lmtest)
+bptest(modelog)
+```
++ **Normalidad de los residuos**
+No hay normalidad (p-value < 0.05)
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+plot(modelog, 2)
+```
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+shapiro.test(modelog$residuals)
+```
++ **No multicolinealidad**
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(DescTools)
+VIF(modelog)
+
+```
++ **Valores influyentes**
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+plot(modelog, 5)
+```
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+checkmodelog = as.data.frame(influence.measures(modelog)$is.inf)
+head(checkmodelog)
+```
+
+# ANEXOS: Análisis de cluster
++ **Armar la base de apoyo**
+```{r}
+cluster_gabriela = subset(vdem, select = c(country_name, year, v2x_libdem, v2elembaut_ord, v2mecrit_ord, v2dlcountr_ord, v2csreprss_ord, v2cseeorgs_ord, v2cscnsult_ord))
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+cluster_gabriela = cluster_gabriela[cluster_gabriela$year==2021,]
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Trabajaremos con los nombres de los países y las seis variables independientes escogidas, por eso anulamos el año y la variable dependiente.
+cluster_gabriela$year = NULL
+cluster_gabriela$v2x_libdem = NULL
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+str(cluster_gabriela)
+
+```
++ **Hacemos la estandarización**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(BBmisc)
+cluster_gabriela[,-1]=normalize(cluster_gabriela[,-1],method='standardize')
+cluster_gabriela=cluster_gabriela[complete.cases(cluster_gabriela),]
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+summary(cluster_gabriela)
+```
++ **Vemos las correlaciones**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+cor(cluster_gabriela[,-1])
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+dataClus=cluster_gabriela[,-1]
+row.names(dataClus)=cluster_gabriela$country_name
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(cluster)
+g.dist = daisy(dataClus, metric="gower")
+```
+
++ **Estrategia Particionante**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Para ver el número ideal de clusters dependiendo del método, la idea es disminuir dimensiones, si tenemos 10 grupos no se reduciría como si tuviéramos 4 por ejemplo.
+# En primer lugar para hacer el cálculo de cuantos grupos o cuantos conglomerados se van a constituir recurrí a la medida gap y especifique el método que voy a  utilizar y por cada método nos da un número de clusters y a partir de ese número de clusters sugerido por PAM, AGNES Y DIANA, es que los ejecuté y luego se hace la visualización que permite ver cuántos casos están mal agrupado y están quedando fuera de una agrupación correcta. El que mejor agrupa es AGNES.
+# El número sugerido de clusters, específicamente para la estrategia particionante es 9.
+library(factoextra)
+set.seed(123)
+fviz_nbclust(dataClus, 
+             pam,
+             diss=g.dist,
+             method = "gap_stat",
+             k.max = 10,
+             verbose = F)
+```
++ **Estrategia Jerárquica Aglomerativa**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# El número sugerido de clusters, específicamente para la estrategia AGNES es 9
+set.seed(123)
+fviz_nbclust(dataClus, 
+             hcut,
+             diss = g.dist,
+             method = "gap_stat",
+             k.max = 10,
+             verbose = F,
+             hc_func = "agnes")
+```
++ **Estrategia Jerárquica Divisiva**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# El número sugerido de clusters, específicamente para la estrategia divisiva es 4.
+set.seed(123)
+fviz_nbclust(dataClus, hcut,diss=g.dist,method = "gap_stat",k.max = 10,verbose = F,hc_func = "diana")
+```
++ **Evaluar resultados, para saber cuál es la estrategia que más nos conviene**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+###pam
+set.seed(123)
+
+res.pam=pam(g.dist,k = 9,cluster.only = F)
+
+###agnes
+res.agnes<- hcut(g.dist, k = 9,hc_func='agnes',hc_method = "ward.D")
+
+### diana
+res.diana <- hcut(g.dist, k = 4,hc_func='diana')
+```
++ **Se escoge el que menos casos abajo porque tienen mal ajuste. Vemos que DIANA tiene más casos abajo**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+fviz_silhouette(res.pam)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+fviz_silhouette(res.agnes)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+fviz_silhouette(res.diana)
+```
+
++ **A partir del gráfico de siluetas, se tiene que el número sugerido para la técnica jerárquica aglomerativa es el que mayor puntuación genera, por lo tanto, es el que menos casos malagrupa**
+
+
++ **Estrategia aglomerativa**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+set.seed(123)
+res.agnes <- hcut(g.dist, k = 9,hc_func='agnes',hc_method = "ward.D")
+dataClus$agnes=res.agnes$cluster
+```
++ **Es normal que salgan valores negativos porque está estandarizado, se está pidiendo la media de cada grupo por variable**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+aggregate(.~ agnes, data=dataClus, mean)
+```
++ **Se reagrupa y se trata de identificar los grupos mejor posicionados**
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+dataClus$agnes=dplyr::recode(dataClus$agnes, `3` = 1, 
+                             `2`=2,
+                             `1`=3,
+                             `6`=4,
+                             `8`=5,
+                             `5`=6,
+                             `9`=7,
+                             `7`=8,
+                             `4`=9)
+```
++ **Proyección de dendograma**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+fviz_dend(res.agnes, cex = 0.7, horiz = T)
+```
+
++ **Estrategia basada en densidad**
++ **Como nos interesa clusterizar todos los casos no vamos a usar la estrategia basada en densidad, esta es buena estrategia cuando hay escenarios en los que tenga que excluir los casos y no me conviene dejar fuera 11 cuando con la estrategia AGNES tengo la posibilidad de mal agrupar sólo a 4**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+proyeccion = cmdscale(g.dist, k=2 , add = T)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+base= ggplot(dataClus,aes(x=dim1, y=dim2)) +  coord_fixed()
+base + geom_point(size=2, aes(color=as.factor(agnes))) + labs(title = "AGNES")
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+g.dist.cmd = daisy(dataClus[,c('dim1','dim2')], metric = 'euclidean')
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(dbscan)
+kNNdistplot(g.dist.cmd, k=7)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(fpc)
+db.cmd = fpc::dbscan(g.dist.cmd, eps=0.065, MinPts=3 , method = 'dist')
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+db.cmd
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+dataClus$db=as.factor(db.cmd$cluster)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(ggrepel)
+base= ggplot(dataClus[dataClus$db!=0,],aes(x=dim1, y=dim2)) + coord_fixed()
+
+dbplot= base + geom_point(aes(color=db)) 
+
+dbplot + geom_point(data=dataClus[dataClus$db==0,],
+                    shape=0) 
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(magrittr)
+```
+
++ **Se observa que son 4 los países mal agrupados**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+silPAM=data.frame(res.pam$silinfo$widths)
+silPAM$country=row.names(silPAM)
+poorPAM=silPAM[silPAM$sil_width<0,'country']%>%sort()
+
+silAGNES=data.frame(res.agnes$silinfo$widths)
+silAGNES$country=row.names(silAGNES)
+poorAGNES=silAGNES[silAGNES$sil_width<0,'country']%>%sort()
+
+silDIANA=data.frame(res.diana$silinfo$widths)
+silDIANA$country=row.names(silDIANA)
+poorDIANA=silDIANA[silDIANA$sil_width<0,'country']%>%sort()
+
+library(qpcR)
+mal_Clus=as.data.frame(qpcR:::cbind.na(poorPAM, poorAGNES,poorDIANA))
+mal_Clus
+```
+# TERCERA PARTE: Análisis de cluster.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# El gráfico muestra de qué manera se agrupo los datos. En algunos casos hay traslape, parece que hay casos encima de otros, esto porque se pide varios grupos para un número no tan alto de casos entonces pareciera que hay un traslape o están ocupando las zonas de otros grupos y como hay 7 variables y 2 dimensiones no necesariamente van a capturar toda la variedad, se reduce a dos solamente para hacer el gráfico.
+original=aggregate(.~ agnes, data=dataClus,mean)
+proyeccion = cmdscale(g.dist, k=2,add = T) 
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2, aes(color=as.factor(agnes)))  + labs(title = "AGNES") 
+```
+
+# ANEXOS: Análisis factorial 
+
++ **Armar la base de apoyo**
+```{r}
+factor_gabriela = subset(vdem, select = c(country_name, year, v2x_libdem, v2elembaut_ord, v2mecrit_ord, v2dlcountr_ord, v2csreprss_ord, v2cseeorgs_ord, v2cscnsult_ord))
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+factor_gabriela = factor_gabriela[factor_gabriela$year==2021,]
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+factor_gabriela$country_name = NULL
+factor_gabriela$year = NULL
+factor_gabriela$v2x_libdem = NULL
+```
+
++ **Análisis Factorial Exploratorio**
++ **Explorar las correlaciones entre las variables**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Es otra forma de reducir las dimensiones.
+# Las cargas de correlaciones son diferentes a 0.
+corMatrix_g = polycor::hetcor(factor_gabriela)$correlations
+corMatrix_g
+```
++ **Graficar la matriz de correlaciones**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Para saber que las variables covarían se hace una matriz de correlaciones, nos dice que si una aumenta la otra también aumenta o viceversa.Vemos que hay variables que se correlacionan más que otras, pero en general todas se correlacionan bien.
+ggcorrplot(corMatrix_g)
+```
++ **Verificar validez del análisis factorial**
++ **Verificar si variables se pueden factorizar** 
+Overall MSA es mayor a 0.6, por lo que el análisis factorial es factible.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+psych::KMO(corMatrix_g)
+```
++ **Descartar una posible matriz de identidad**
+Sale FALSE (p-value NO es mayor a 0.05), por lo que el análisis factorial es factible.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Queda comprobado que no es una matriz de identidad, que no se correlacionen entre sí mismas, sino con otras variables además de sí mismas y forman parte de un mismo concepto sin que haya relación de dependencia.
+cortest.bartlett(corMatrix_g, n = nrow(factor_gabriela))$p.value>0.05
+```
++ **Descartar una posible matriz singular**
+Sale FALSE, por lo que el análisis factorial es factible.
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Queda comprobado que no es una matriz singular.
+is.singular.matrix(corMatrix_g)
+```
++ **Determinar en cuántos factores se pueden agrupar las variables**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Nos sugiere que el número de factores es 1.
+fa.parallel(factor_gabriela, fm = "ML", fa = "fa")
+```
+
++ **Observar las cargas factoriales y ver en qué factores se ubicaría cada variable**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#Observamos que el pocertanje de la varianza de las variables es de 72% lo cual está bastante bien. Nos explica la variación de las variables en conjunto, está explicando un 72%.
+resfa_g <- fa(factor_gabriela, nfactors = 1, cor = "cor", rotate = "varimax", fm = "minres")
+print(resfa_g$loadings, cutoff = 0.5)
+```
+# CUARTA PARTE: Análisis factorial
++ **Graficar cómo se agrupan las variables**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Hay un sólo factor que está detrás del comportamiento de esas 6 variables.
+fa.diagram(resfa_g)
+```
++ **Evaluar los resultados obtenidos**
++ **¿Qué variables aportaron más a los factores?**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Las comunalidades no está diciendo qué porcentaje de las variables con las que estoy trabajando carga bien, la que menor carga es Consulta gubernamental hacia Organizaciones de Sociedad Civil con un 59.65%.
+sort(resfa_g$communality)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+#Observar los posibles valores proyectados**
+#Para grabar en la base los puntajes de los factores**
+factor_gabriela$puntaje = resfa_g$scores
+```
++ **Análisis Factorial Confirmatorio**
++ **Construir un modelo lineal**
+```{r}
+
+modelog <- ' factorg  =~ v2elembaut_ord + v2mecrit_ord + v2dlcountr_ord + v2csreprss_ord + v2cseeorgs_ord + v2cscnsult_ord'
+```
++ **Crear un objeto para hacer las validaciones**
+```{r}
+
+cfa_fit <- cfa(modelog, data=factor_gabriela, 
+           std.lv=TRUE,  
+           missing="fiml")
+```
++ **Preparar los test para las validaciones**
+```{r}
+
+allParamCFA=parameterEstimates(cfa_fit,standardized = T)
+allFitCFA=as.list(fitMeasures(cfa_fit))
+```
++ **Ver si cada variable tiene una buena relación con su factor (p-value menor a 0.05 indica que la variable tiene buena relación con su latente)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+allParamCFA[allParamCFA$op=="=~",]
+```
++ **Ver si la asignación de variables ha relativamente buena (p-value mayor a 0.05 para validar el modelo)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+allFitCFA[c("chisq", "df", "pvalue")]
+```
++ **Otra prueba para ver si el análisis factorial es relativamente bueno (índice Tucker - Lewi debe ser mayor a 0.9)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+allFitCFA$tli
+```
++ **Ver si la raíz del error cuadrático medio de aproximación es menor a 0.05 (ver rmsea)**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+allFitCFA[c('rmsea.ci.lower','rmsea' ,'rmsea.ci.upper')]
+```
++ **Hacer predicciones (scores) de las variables latentes**
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+scorescfa=normalize(lavPredict(cfa_fit),
+                    method = "range", 
+                    margin=2, # by column
+                    range = c(0, 10))
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+factor_gabriela$prediccion = scorescfa
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(data=factor_gabriela,aes(x=prediccion,y=puntaje)) + geom_point() + theme_minimal()
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+cluster_factor_gabriela = merge(dataClus, factor_gabriela$puntaje)
+```
+# CONCLUSIONES.
+Si bien no siempre es posible identificar la causalidad directa con 100
+por ciento de certeza, se puede identificar las conclusiones sobre las consecuencias y limitaciones de la gobernabilidad democrática. Por lo tanto, el presente reporte nos proporcionó evidencia gráfica sobre cuáles son las relaciones entre el Indice de democracia liberal con la Autonomía de los Gobiernos Electorales, Medios de comunicación escritos o transmitidos críticos del gobierno y el Respeto a Contraargumentos, Represión gubernamental de Organizaciones de Sociedad Civil,Control gubernamental sobre Organizaciones de Sociedad Civil y Consulta gubernamental hacia Organizaciones de Sociedad Civil.
+
+
+
+
+
+
+
+
+
+
+
+
